@@ -35,16 +35,15 @@ def validate_directory(directory):
 
 # Calculate checksum of a file using SHA256
 def calculate_checksum(file_path):
-    sha256 = hashlib.sha256()
     try:
-            fobj = open(FileName , "rb")
+            fobj = open(file_path , "rb")
             hobj = hashlib.md5()
             buffer = fobj.read(1024)  #1KB = 1024 bytes
             while(len(buffer)> 0):
                  hobj .update(buffer)
                  buffer = fobj.read(1024)
 
-            return sha256.hexdigest()
+            return hobj.hexdigest()
     except Exception as e:
         print(f"Cannot read file {file_path}: {e}")
         return None
@@ -61,21 +60,29 @@ def delete_duplicates(directory):
                     # Duplicate found, delete the file
                     try:
                         os.remove(file_path)
-                        logging.info(f"Deleted duplicate: {file}")
+                        print(f"Deleted duplicate: {file}")
                     except Exception as e:
-                        logging.error(f"Failed to delete {file}: {e}")
+                        print(f"Failed to delete {file}: {e}")
                 else:
                     checksum_map[checksum] = file
 
 # Main function
 def main():
-    setup_logger()
+    CreateLog()
     try:
         directory = input("Enter directory path: ").strip()
         validate_directory(directory)
         delete_duplicates(directory)
     except Exception as e:
-        logging.error(f"Error: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
+
+#OUTPUT
+# C:\Users\Dhanashri\Desktop\Python\Assignment_20>python Assignment20_3.py Automation
+#MarvellousLogWed_Jun_18_00_06_25_2025.log
+#Enter directory path: C:\Users\Dhanashri\Desktop\Python\Assignment_20\Automation
+#Deleted duplicate: x (2).txt
+#Deleted duplicate: x.txt
+#Deleted duplicate: y.txt    
