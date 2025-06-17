@@ -1,0 +1,8 @@
+# Create 3 dummy .exe files in a folder called Demo
+import os
+
+os.makedirs("Demo", exist_ok=True)
+
+for i in range(1, 4):
+    with open(f"Demo/app{i}.exe", "w") as f:
+        f.write("This is a dummy .exe file.")
