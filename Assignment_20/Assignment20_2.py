@@ -41,7 +41,8 @@ def CalculateChecksum(FileName):
         while(len(buffer)> 0):
             hobj .update(buffer)
             buffer = fobj.read(1024)
-
+        
+        return hobj.hexdigest()
         #fobj.close()
 
         #print("Checksum of file is : ",hobj.hexdigest())  #inbuilt function gives 32 bytes number
@@ -72,3 +73,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#OUTPUT
+#C:\Users\Dhanashri\Desktop\Python\Assignment_20>python Assignment20_2.py Automation
+#MarvellousLogWed_Jun_18_00_03_45_2025.log
+#Enter directory path: C:\Users\Dhanashri\Desktop\Python\Assignment_20\Automation
+#Duplicate not found
