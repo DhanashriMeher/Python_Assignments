@@ -37,7 +37,7 @@ def CalculateChecksum(path,BlockSize = 1024):
 
     fobj.close()
 
-    return hobj.hdefexdigest()
+    return hobj.hexdigest()  #get the result as a readable string of letters & nos(hexadecimal format).
 
 def FindDuplicates(DirName = "Marvellous"):
 
@@ -45,13 +45,13 @@ def FindDuplicates(DirName = "Marvellous"):
 
     if(flag == False):
         DirectoryName =os.path.abspath(DirName)
+    #flag = os.path.exists(DirName)
+    flag =os.path.exists(DirectoryName)
 
-    flag = os.path.exists(DirName)
-    
     #if(flag == False):
      #   print("The path is invalid")
   
-    flag = os.path.isdir(DirName)
+    #flag = os.path.isdir(DirName)
 
     #if(flag == False):
      #   print("Path is valid but the target is not a directory")
@@ -59,15 +59,15 @@ def FindDuplicates(DirName = "Marvellous"):
  
     Duplicate = {}
 
-    for FolderName,SubFoldeNames,FileNames in os.walk(DirName):
+    for FolderName,SubFolderNames,FileNames in os.walk(DirName):
         for fName in FileNames:
             fName = os.path.join(FolderName,fName)
             checksum = CalculateChecksum(fName)
 
-        if checksum in Duplicate:
-            Duplicate[checksum].append(fName)
-        else:
-            Duplicate[checksum] = [fName]
+            if checksum in Duplicate:
+                Duplicate[checksum].append(fName)
+            else:
+                Duplicate[checksum] = [fName]
 
     return Duplicate
 
@@ -90,29 +90,52 @@ def DeleteDuplicate(path = "Marvellous"):
     print("Total deleted file : ",Cnt)            
 
 #Function to send email with log
-def send_email(to_email, log_path, stats):
+import smtplib
+import os
+from email.message import EmailMessage
+
+def send_email1(to_email, logfile_path, stats):
+    from_email = "example@gmail.com"          #  Replace with your Gmail
+    app_password = " "          #  Use Gmail App Password
+
+    # Prepare the email body safely
+    if stats is None or len(stats) < 3:
+        body = "Error: Could not generate statistics."
+    else:
+        body = f"""Duplicate File Removal Report
+
+Start Time            : {stats[0]}
+Total Files Scanned   : {stats[1]}
+Duplicate Files Deleted: {stats[2]}
+"""
+
+    #  Create the email message
     msg = EmailMessage()
     msg['Subject'] = "Duplicate File Removal Report"
-    msg['From'] = "Example@gmail.com"  # replace
+    msg['From'] = "example@gmail.com"
     msg['To'] = to_email
-    body = f"""Duplicate File Removal Details:
-
-Start Time         : {stats[0]}
-Files Scanned      : {stats[1]}
-Duplicates Deleted : {stats[2]}
-
-See attached log for more info.
-"""
     msg.set_content(body)
 
-    with open(log_path, 'rb') as f:
-        msg.add_attachment(f.read(), filename=os.path.basename(log_path))
+    # Attach the log file
+    try:
+        with open(logfile_path, 'rb') as f:
+            log_data = f.read()
+            msg.add_attachment(log_data, maintype='application', subtype='octet-stream',
+                               filename=os.path.basename(logfile_path))
+    except Exception as e:
+        print(f"Failed to attach log file: {e}")
+        return
 
-    # Send using Gmail SMTP (change if needed)
-    with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
-        smtp.starttls()
-        smtp.login("example@gmail.com","password")  # replace
-        smtp.send_message(msg)
+    # Send the email using Gmail's SMTP
+    try:
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login(from_email, app_password)
+            server.send_message(msg)
+            print(" Email sent successfully.")
+    except Exception as e:
+        print(f" Failed to send email: {e}")
+
 
 # Main function
 def main():
@@ -130,7 +153,7 @@ def main():
     logfile = f"Marvellous/log_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
 
     stats = DeleteDuplicate(logfile)
-    send_email(email, logfile, stats)
+    send_email1(email, logfile, stats)
     print("Duplicate files deleted and report sent.")
 
 if __name__ == "__main__":
