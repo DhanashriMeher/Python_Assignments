@@ -40,23 +40,21 @@ def CalculateChecksum(path,BlockSize = 1024):
     return hobj.hexdigest()  #get the result as a readable string of letters & nos(hexadecimal format).
 
 def FindDuplicates(DirName = "Marvellous"):
-
-    flag = os.path.isabs(DirName)
-
+    
+    flag = os.path.isabs(DirectoryName)
     if(flag == False):
-        DirectoryName =os.path.abspath(DirName)
-    #flag = os.path.exists(DirName)
-    flag =os.path.exists(DirectoryName)
+        DirectoryName = os.path.abspath(DirectoryName)
 
-    #if(flag == False):
-     #   print("The path is invalid")
-  
-    #flag = os.path.isdir(DirName)
+    flag = os.path.exists(DirectoryName)
+    if(flag == False):
+        print("The path is invalid")
+        exit()
 
-    #if(flag == False):
-     #   print("Path is valid but the target is not a directory")
-      #  exit()
- 
+    flag = os.path.isdir(DirectoryName)
+    if(flag == False):
+        print("Path is valid but the target is not a directory")
+        exit()
+
     Duplicate = {}
 
     for FolderName,SubFolderNames,FileNames in os.walk(DirName):
