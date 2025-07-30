@@ -7,7 +7,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score,confusion_matrix,classification_report,roc_auc_score
+from sklearn.metrics import accuracy_score,confusion_matrix,classification_report,roc_auc_score,roc_curve,auc
+from sklearn.ensemble import VotingClassifier
+
 
 def BankPredict(Datapath):
 
@@ -49,32 +51,35 @@ def BankPredict(Datapath):
     x_train,x_test,y_train,y_test = train_test_split(scaler,y,test_size=0.2,random_state=42)
     
     #Checking model with KNN
-    logisticmodel = LogisticRegression(max_iter=1000)
-    knn_model = KNeighborsClassifier(n_neighbors=5)
-    rf_model = RandomForestClassifier(random_state=42)
+    log_clf = LogisticRegression()
+    dt_clf = RandomForestClassifier(n_estimators= 150, max_depth=7,random_state= 42)
+    knn_clf = KNeighborsClassifier(n_neighbors= 3)
 
-    # Train models
-    logisticmodel.fit(x_train, y_train)
-    knn_model.fit(x_train, y_train)
-    rf_model.fit(x_train, y_train)
+    voting_clf = VotingClassifier(
+        estimators= [
+            ('lr',log_clf),
+            ('dt',dt_clf),
+            ('knn',knn_clf)   
+        ],
+        voting = 'soft'
+    )   
+    voting_clf.fit(x_train,y_train)
 
-    ylogpred = logisticmodel.predict(x_test)
-    #yknnpred = knn_model.predict(x_test)
-    #rfpred = rf_model.predict(x_test)
+    y_pred = voting_clf.predict(x_test)
 
-    y_prob = ylogpred.predict_proba(x_test)[:, 1]
+    y_prob = voting_clf.predict_proba(x_test)[:, 1]
 
     print(f"Information about logistic registration")
-    print("Accuracy:", accuracy_score(y_test, ylogpred))
-    print("Confusion Matrix:\n", confusion_matrix(y_test, ylogpred))
-    print("Classification Report:\n", classification_report(y_test, ylogpred))
+    print("Accuracy:", accuracy_score(y_test, y_pred))
+    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    print("Classification Report:\n", classification_report(y_test, y_pred))
     print("ROC-AUC Score:", roc_auc_score(y_test, y_prob))
 
-    confusionMatrix = confusion_matrix(y_test,ylogpred)
+    confusionMatrix = confusion_matrix(y_test,y_pred)
     print("Confusion Matrix :",confusionMatrix)
     print(Line)
 
-    ROCCurve = roc_auc_score(y_test,ylogpred)
+    ROCCurve = roc_auc_score(y_test,y_pred)
     print("ROC Curve : ",ROCCurve)
 
     #PLOT Confusion matrix
@@ -85,8 +90,21 @@ def BankPredict(Datapath):
     plt.title("Confusion Matrix")
     plt.show()
 
-    
+    fpr, tpr, thresholds = roc_curve(y_test, y_prob)
 
+    # Compute the Area Under the Curve (AUC)
+    roc_auc = auc(fpr, tpr)
+
+    # Plot the ROC curve
+    plt.figure(figsize=(6, 4))
+    plt.plot(fpr, tpr, color='blue', label=f'ROC Curve')
+    plt.plot([0, 1], [0, 1], color='gray', linestyle='--')  # Diagonal line
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(loc='lower right')
+    plt.grid(True)
+    plt.show()
 
 
 def main():
